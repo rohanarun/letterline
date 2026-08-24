@@ -1,0 +1,1560 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "productVersion": "0.1.0",
+    "backendRelease": "v0.4.2",
+    "backendCommit": "20c4a704c77cbbbff1da995e1d91b937625a8aa4",
+    "backendSourceSnapshotSha256": "d0b7b1079d4924eb7369c788a979a707d45bb63470290e6ac33ee5662d78f69f",
+    "generatedAt": "2026-08-24T00:00:00.000Z",
+    "generator": "managed-oss-cloud/scripts/generate-product-repositories.mjs"
+  },
+  "product": {
+    "slug": "letterline",
+    "command": "letterline",
+    "mcpPrefix": "letterline",
+    "environmentPrefix": "LETTERLINE",
+    "name": "Letterline",
+    "tagline": "Purpose-bound audiences, consent evidence, reviewed campaigns, and provider-neutral dispatch plans.",
+    "repository": "https://github.com/rohanarun/letterline",
+    "license": "MIT",
+    "accent": "#70cfef",
+    "accentDark": "#26728a"
+  },
+  "module": {
+    "id": "email",
+    "category": "Email marketing",
+    "description": "Purpose-bound audiences, immutable consent and suppression evidence, reviewed campaign versions, cited AI proposals, and provider-neutral dispatch plans.",
+    "minimumHostedPlan": "starter",
+    "resourceClass": "shared",
+    "recordTypes": [
+      "audience",
+      "subscriber",
+      "consent-receipt",
+      "suppression",
+      "campaign",
+      "campaign-version",
+      "campaign-review",
+      "campaign-approval",
+      "campaign-schedule",
+      "dispatch-plan",
+      "provider-receipt",
+      "audience-export",
+      "email-ai-request-audit",
+      "email-command-receipt"
+    ],
+    "aiCapabilities": [
+      "propose cited subject lines",
+      "propose cited newsletter bodies",
+      "flag unsupported claims for review"
+    ],
+    "scaleGuidance": "Use Scale for large audiences, high provider-receipt volume, frequent campaigns, long retention, or large private exports.",
+    "externalUsage": [
+      "customer email provider",
+      "customer verification gateway",
+      "customer-selected model endpoint"
+    ]
+  },
+  "backend": {
+    "defaultUrl": "https://cloud.getsupers.com",
+    "workspaceEndpoint": "/api/suite/workspace",
+    "actionEndpointPattern": "/api/suite/modules/email/actions/{actionId}",
+    "authentication": "Bearer API token",
+    "databaseBoundary": "All shared database access and tenant isolation remain behind the managed-oss-cloud API."
+  },
+  "cleanRoom": {
+    "statement": "Original clean-room implementation of the email marketing software category, designed and written independently.",
+    "sourceBoundary": "Public category behavior informed requirements; implementation and product identity are original."
+  },
+  "actions": [
+    {
+      "id": "audience-create",
+      "moduleId": "email",
+      "title": "Create purpose-bound audience",
+      "description": "Create an audience with an explicit purpose and consent-policy boundary before collecting any address.",
+      "operation": "command",
+      "recordType": "audience",
+      "requiredFields": [
+        "name",
+        "purpose",
+        "consentPolicyVersion",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "name",
+          "purpose",
+          "consentPolicyVersion",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "consentPolicyVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "name": "Product newsletter",
+        "purpose": "Send a reviewed monthly product newsletter to people who opted in.",
+        "consentPolicyVersion": "newsletter-consent-v1",
+        "idempotencyKey": "email.audience-create.sample-0001"
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_audience_create",
+      "cliExample": "supersuite action email audience-create '{\"name\":\"Product newsletter\",\"purpose\":\"Send a reviewed monthly product newsletter to people who opted in.\",\"consentPolicyVersion\":\"newsletter-consent-v1\",\"idempotencyKey\":\"email.audience-create.sample-0001\"}'",
+      "risk": "low",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_audience_create",
+      "productMcpToolName": "letterline_audience_create",
+      "productCliExample": "letterline action audience-create '{\"name\":\"Product newsletter\",\"purpose\":\"Send a reviewed monthly product newsletter to people who opted in.\",\"consentPolicyVersion\":\"newsletter-consent-v1\",\"idempotencyKey\":\"email.audience-create.sample-0001\"}'"
+    },
+    {
+      "id": "subscriber-opt-in-record",
+      "moduleId": "email",
+      "title": "Record lawful subscriber opt-in",
+      "description": "Normalize and deduplicate one address while creating an immutable, purpose-specific consent receipt; purchased-list assumptions are rejected.",
+      "operation": "command",
+      "recordType": "subscriber",
+      "requiredFields": [
+        "audienceId",
+        "email",
+        "consent",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "audienceId",
+          "email",
+          "consent",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "audienceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 320
+          },
+          "displayName": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "locale": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "consent": {
+            "type": "object",
+            "required": [
+              "granted",
+              "policyVersion",
+              "purposes",
+              "capturedAt",
+              "captureMethod",
+              "sourceProofHash",
+              "purchasedList",
+              "doubleOptInConfirmed",
+              "reconfirmationAfterSuppression"
+            ],
+            "properties": {
+              "granted": {
+                "const": true
+              },
+              "policyVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "purposes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 3,
+                "items": {
+                  "enum": [
+                    "newsletter",
+                    "product-updates",
+                    "promotional-email"
+                  ]
+                }
+              },
+              "capturedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "captureMethod": {
+                "enum": [
+                  "hosted-form",
+                  "api-attestation",
+                  "signed-first-party-import"
+                ]
+              },
+              "sourceProofHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "purchasedList": {
+                "const": false
+              },
+              "doubleOptInConfirmed": {
+                "type": "boolean"
+              },
+              "reconfirmationAfterSuppression": {
+                "type": "boolean"
+              },
+              "jurisdiction": {
+                "type": "string",
+                "maxLength": 80
+              }
+            },
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "audienceId": "00000000-0000-4000-8000-000000000101",
+        "email": "Reader@example.com",
+        "displayName": "Reader",
+        "locale": "en-US",
+        "consent": {
+          "granted": true,
+          "policyVersion": "newsletter-consent-v1",
+          "purposes": [
+            "newsletter"
+          ],
+          "capturedAt": "2026-08-24T16:00:00.000Z",
+          "captureMethod": "hosted-form",
+          "sourceProofHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "purchasedList": false,
+          "doubleOptInConfirmed": true,
+          "reconfirmationAfterSuppression": false
+        },
+        "idempotencyKey": "email.subscriber-opt-in-record.sample-0001"
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_subscriber_opt_in_record",
+      "cliExample": "supersuite action email subscriber-opt-in-record '{\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"email\":\"Reader@example.com\",\"displayName\":\"Reader\",\"locale\":\"en-US\",\"consent\":{\"granted\":true,\"policyVersion\":\"newsletter-consent-v1\",\"purposes\":[\"newsletter\"],\"capturedAt\":\"2026-08-24T16:00:00.000Z\",\"captureMethod\":\"hosted-form\",\"sourceProofHash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"purchasedList\":false,\"doubleOptInConfirmed\":true,\"reconfirmationAfterSuppression\":false},\"idempotencyKey\":\"email.subscriber-opt-in-record.sample-0001\"}'",
+      "risk": "moderate",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_subscriber_opt_in_record",
+      "productMcpToolName": "letterline_subscriber_opt_in_record",
+      "productCliExample": "letterline action subscriber-opt-in-record '{\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"email\":\"Reader@example.com\",\"displayName\":\"Reader\",\"locale\":\"en-US\",\"consent\":{\"granted\":true,\"policyVersion\":\"newsletter-consent-v1\",\"purposes\":[\"newsletter\"],\"capturedAt\":\"2026-08-24T16:00:00.000Z\",\"captureMethod\":\"hosted-form\",\"sourceProofHash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"purchasedList\":false,\"doubleOptInConfirmed\":true,\"reconfirmationAfterSuppression\":false},\"idempotencyKey\":\"email.subscriber-opt-in-record.sample-0001\"}'"
+    },
+    {
+      "id": "subscriber-reactivate",
+      "moduleId": "email",
+      "title": "Reconfirm suppressed subscriber",
+      "description": "Reactivate only a prior unsubscribe or manual suppression after a newer double opt-in; hard bounces, complaints, and legal blocks remain blocked.",
+      "operation": "command",
+      "recordType": "consent-receipt",
+      "requiredFields": [
+        "subscriberId",
+        "audienceId",
+        "consent",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "subscriberId",
+          "audienceId",
+          "consent",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "subscriberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "audienceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consent": {
+            "type": "object",
+            "required": [
+              "granted",
+              "policyVersion",
+              "purposes",
+              "capturedAt",
+              "captureMethod",
+              "sourceProofHash",
+              "purchasedList",
+              "doubleOptInConfirmed",
+              "reconfirmationAfterSuppression"
+            ],
+            "properties": {
+              "granted": {
+                "const": true
+              },
+              "policyVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "purposes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 3,
+                "items": {
+                  "enum": [
+                    "newsletter",
+                    "product-updates",
+                    "promotional-email"
+                  ]
+                }
+              },
+              "capturedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "captureMethod": {
+                "enum": [
+                  "hosted-form",
+                  "api-attestation",
+                  "signed-first-party-import"
+                ]
+              },
+              "sourceProofHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "purchasedList": {
+                "const": false
+              },
+              "doubleOptInConfirmed": {
+                "type": "boolean"
+              },
+              "reconfirmationAfterSuppression": {
+                "type": "boolean"
+              },
+              "jurisdiction": {
+                "type": "string",
+                "maxLength": 80
+              }
+            },
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "subscriberId": "00000000-0000-4000-8000-000000000102",
+        "audienceId": "00000000-0000-4000-8000-000000000101",
+        "consent": {
+          "granted": true,
+          "policyVersion": "newsletter-consent-v1",
+          "purposes": [
+            "newsletter"
+          ],
+          "capturedAt": "2026-08-25T16:00:00.000Z",
+          "captureMethod": "hosted-form",
+          "sourceProofHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "purchasedList": false,
+          "doubleOptInConfirmed": true,
+          "reconfirmationAfterSuppression": true
+        },
+        "idempotencyKey": "email.subscriber-reactivate.sample-0001"
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_subscriber_reactivate",
+      "cliExample": "supersuite action email subscriber-reactivate '{\"subscriberId\":\"00000000-0000-4000-8000-000000000102\",\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"consent\":{\"granted\":true,\"policyVersion\":\"newsletter-consent-v1\",\"purposes\":[\"newsletter\"],\"capturedAt\":\"2026-08-25T16:00:00.000Z\",\"captureMethod\":\"hosted-form\",\"sourceProofHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purchasedList\":false,\"doubleOptInConfirmed\":true,\"reconfirmationAfterSuppression\":true},\"idempotencyKey\":\"email.subscriber-reactivate.sample-0001\"}'",
+      "risk": "high",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_subscriber_reactivate",
+      "productMcpToolName": "letterline_subscriber_reactivate",
+      "productCliExample": "letterline action subscriber-reactivate '{\"subscriberId\":\"00000000-0000-4000-8000-000000000102\",\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"consent\":{\"granted\":true,\"policyVersion\":\"newsletter-consent-v1\",\"purposes\":[\"newsletter\"],\"capturedAt\":\"2026-08-25T16:00:00.000Z\",\"captureMethod\":\"hosted-form\",\"sourceProofHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purchasedList\":false,\"doubleOptInConfirmed\":true,\"reconfirmationAfterSuppression\":true},\"idempotencyKey\":\"email.subscriber-reactivate.sample-0001\"}'"
+    },
+    {
+      "id": "subscriber-suppress",
+      "moduleId": "email",
+      "title": "Suppress or unsubscribe immediately",
+      "description": "Apply an immutable unsubscribe, bounce, complaint, legal, or manual suppression before any future dispatch plan is created.",
+      "operation": "command",
+      "recordType": "suppression",
+      "requiredFields": [
+        "subscriberId",
+        "reason",
+        "occurredAt",
+        "evidenceHash",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "subscriberId",
+          "reason",
+          "occurredAt",
+          "evidenceHash",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "subscriberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "enum": [
+              "unsubscribe",
+              "hard-bounce",
+              "complaint",
+              "legal-block",
+              "manual"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "evidenceHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "subscriberId": "00000000-0000-4000-8000-000000000102",
+        "reason": "unsubscribe",
+        "occurredAt": "2026-08-24T17:00:00.000Z",
+        "evidenceHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "note": "Recipient used the hosted unsubscribe control.",
+        "idempotencyKey": "email.subscriber-suppress.sample-0001"
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_subscriber_suppress",
+      "cliExample": "supersuite action email subscriber-suppress '{\"subscriberId\":\"00000000-0000-4000-8000-000000000102\",\"reason\":\"unsubscribe\",\"occurredAt\":\"2026-08-24T17:00:00.000Z\",\"evidenceHash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"note\":\"Recipient used the hosted unsubscribe control.\",\"idempotencyKey\":\"email.subscriber-suppress.sample-0001\"}'",
+      "risk": "moderate",
+      "destructive": true,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_subscriber_suppress",
+      "productMcpToolName": "letterline_subscriber_suppress",
+      "productCliExample": "letterline action subscriber-suppress '{\"subscriberId\":\"00000000-0000-4000-8000-000000000102\",\"reason\":\"unsubscribe\",\"occurredAt\":\"2026-08-24T17:00:00.000Z\",\"evidenceHash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"note\":\"Recipient used the hosted unsubscribe control.\",\"idempotencyKey\":\"email.subscriber-suppress.sample-0001\"}'"
+    },
+    {
+      "id": "subscriber-list",
+      "moduleId": "email",
+      "title": "List audience subscribers",
+      "description": "List tenant-scoped subscriber records with an explicit choice about whether suppressed records are included.",
+      "operation": "read",
+      "recordType": "subscriber",
+      "requiredFields": [
+        "audienceId",
+        "includeSuppressed"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "audienceId",
+          "includeSuppressed"
+        ],
+        "properties": {
+          "audienceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "includeSuppressed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "audienceId": "00000000-0000-4000-8000-000000000101",
+        "includeSuppressed": false
+      },
+      "requiredScope": "read",
+      "mcpToolName": "email_subscriber_list",
+      "cliExample": "supersuite action email subscriber-list '{\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"includeSuppressed\":false}'",
+      "risk": "low",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_subscriber_list",
+      "productMcpToolName": "letterline_subscriber_list",
+      "productCliExample": "letterline action subscriber-list '{\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"includeSuppressed\":false}'"
+    },
+    {
+      "id": "campaign-create",
+      "moduleId": "email",
+      "title": "Create audience-bound campaign",
+      "description": "Create a campaign objective bound to one existing audience without drafting, scheduling, or sending content.",
+      "operation": "command",
+      "recordType": "campaign",
+      "requiredFields": [
+        "audienceId",
+        "name",
+        "objective",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "audienceId",
+          "name",
+          "objective",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "audienceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "objective": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "audienceId": "00000000-0000-4000-8000-000000000101",
+        "name": "September product letter",
+        "objective": "Explain reviewed product improvements to opted-in readers.",
+        "idempotencyKey": "email.campaign-create.sample-0001"
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_campaign_create",
+      "cliExample": "supersuite action email campaign-create '{\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"name\":\"September product letter\",\"objective\":\"Explain reviewed product improvements to opted-in readers.\",\"idempotencyKey\":\"email.campaign-create.sample-0001\"}'",
+      "risk": "low",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_campaign_create",
+      "productMcpToolName": "letterline_campaign_create",
+      "productCliExample": "letterline action campaign-create '{\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"name\":\"September product letter\",\"objective\":\"Explain reviewed product improvements to opted-in readers.\",\"idempotencyKey\":\"email.campaign-create.sample-0001\"}'"
+    },
+    {
+      "id": "campaign-version-draft",
+      "moduleId": "email",
+      "title": "Create immutable campaign version",
+      "description": "Freeze an exact subject, sender identity, reply address, plain text, optional HTML, and required unsubscribe marker under an optimistic campaign version.",
+      "operation": "command",
+      "recordType": "campaign-version",
+      "requiredFields": [
+        "campaignId",
+        "expectedCampaignVersion",
+        "subject",
+        "senderName",
+        "replyToEmail",
+        "bodyText",
+        "footer",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "campaignId",
+          "expectedCampaignVersion",
+          "subject",
+          "senderName",
+          "replyToEmail",
+          "bodyText",
+          "footer",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedCampaignVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "preheader": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "senderName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "replyToEmail": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 320
+          },
+          "bodyText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100000
+          },
+          "bodyHtml": {
+            "type": "string",
+            "maxLength": 200000
+          },
+          "footer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "campaignId": "00000000-0000-4000-8000-000000000103",
+        "expectedCampaignVersion": 1,
+        "subject": "September product notes",
+        "preheader": "A concise review of this month's improvements.",
+        "senderName": "Example Product",
+        "replyToEmail": "hello@example.com",
+        "bodyText": "Hello,\n\nHere are the reviewed updates.\n\nUnsubscribe: {{unsubscribe_url}}",
+        "footer": "Example Product · Contact us at hello@example.com · {{unsubscribe_url}}",
+        "idempotencyKey": "email.campaign-version-draft.sample-0001"
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_campaign_version_draft",
+      "cliExample": "supersuite action email campaign-version-draft '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"expectedCampaignVersion\":1,\"subject\":\"September product notes\",\"preheader\":\"A concise review of this month'\\''s improvements.\",\"senderName\":\"Example Product\",\"replyToEmail\":\"hello@example.com\",\"bodyText\":\"Hello,\\n\\nHere are the reviewed updates.\\n\\nUnsubscribe: {{unsubscribe_url}}\",\"footer\":\"Example Product · Contact us at hello@example.com · {{unsubscribe_url}}\",\"idempotencyKey\":\"email.campaign-version-draft.sample-0001\"}'",
+      "risk": "moderate",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_campaign_version_draft",
+      "productMcpToolName": "letterline_campaign_version_draft",
+      "productCliExample": "letterline action campaign-version-draft '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"expectedCampaignVersion\":1,\"subject\":\"September product notes\",\"preheader\":\"A concise review of this month's improvements.\",\"senderName\":\"Example Product\",\"replyToEmail\":\"hello@example.com\",\"bodyText\":\"Hello,\\n\\nHere are the reviewed updates.\\n\\nUnsubscribe: {{unsubscribe_url}}\",\"footer\":\"Example Product · Contact us at hello@example.com · {{unsubscribe_url}}\",\"idempotencyKey\":\"email.campaign-version-draft.sample-0001\"}'"
+    },
+    {
+      "id": "subject-propose",
+      "moduleId": "email",
+      "title": "Propose cited subject lines",
+      "description": "Queue evidence-bound subject proposals that remain pending human review and cannot alter, approve, schedule, or send a campaign.",
+      "operation": "ai",
+      "recordType": "email-ai-request-audit",
+      "requiredFields": [
+        "campaignId",
+        "instruction",
+        "evidenceIds",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "campaignId",
+          "instruction",
+          "evidenceIds",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instruction": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "evidenceIds": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "campaignId": "00000000-0000-4000-8000-000000000103",
+        "instruction": "Propose concise subject lines supported by the selected evidence without urgency or unsupported claims.",
+        "evidenceIds": [
+          "00000000-0000-4000-8000-000000000106"
+        ],
+        "idempotencyKey": "email.subject-propose.sample-0001"
+      },
+      "requiredScope": "ai",
+      "mcpToolName": "email_subject_propose",
+      "cliExample": "supersuite action email subject-propose '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"instruction\":\"Propose concise subject lines supported by the selected evidence without urgency or unsupported claims.\",\"evidenceIds\":[\"00000000-0000-4000-8000-000000000106\"],\"idempotencyKey\":\"email.subject-propose.sample-0001\"}'",
+      "risk": "moderate",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_subject_propose",
+      "productMcpToolName": "letterline_subject_propose",
+      "productCliExample": "letterline action subject-propose '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"instruction\":\"Propose concise subject lines supported by the selected evidence without urgency or unsupported claims.\",\"evidenceIds\":[\"00000000-0000-4000-8000-000000000106\"],\"idempotencyKey\":\"email.subject-propose.sample-0001\"}'"
+    },
+    {
+      "id": "body-propose",
+      "moduleId": "email",
+      "title": "Propose cited newsletter body",
+      "description": "Queue an evidence-bound plain-text body proposal with an unsubscribe marker; it remains unreviewed and cannot be dispatched.",
+      "operation": "ai",
+      "recordType": "email-ai-request-audit",
+      "requiredFields": [
+        "campaignId",
+        "instruction",
+        "evidenceIds",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "campaignId",
+          "instruction",
+          "evidenceIds",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instruction": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "evidenceIds": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "campaignId": "00000000-0000-4000-8000-000000000103",
+        "instruction": "Draft a factual newsletter body with citations and the required unsubscribe marker.",
+        "evidenceIds": [
+          "00000000-0000-4000-8000-000000000106"
+        ],
+        "idempotencyKey": "email.body-propose.sample-0001"
+      },
+      "requiredScope": "ai",
+      "mcpToolName": "email_body_propose",
+      "cliExample": "supersuite action email body-propose '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"instruction\":\"Draft a factual newsletter body with citations and the required unsubscribe marker.\",\"evidenceIds\":[\"00000000-0000-4000-8000-000000000106\"],\"idempotencyKey\":\"email.body-propose.sample-0001\"}'",
+      "risk": "moderate",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_body_propose",
+      "productMcpToolName": "letterline_body_propose",
+      "productCliExample": "letterline action body-propose '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"instruction\":\"Draft a factual newsletter body with citations and the required unsubscribe marker.\",\"evidenceIds\":[\"00000000-0000-4000-8000-000000000106\"],\"idempotencyKey\":\"email.body-propose.sample-0001\"}'"
+    },
+    {
+      "id": "campaign-review-record",
+      "moduleId": "email",
+      "title": "Record human content review",
+      "description": "Create an attributable review of the exact immutable campaign version and required consent, claims, unsubscribe, and sender-identity checks.",
+      "operation": "command",
+      "recordType": "campaign-review",
+      "requiredFields": [
+        "campaignId",
+        "campaignVersionId",
+        "expectedCampaignVersion",
+        "contentHash",
+        "decision",
+        "checklist",
+        "reason",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "campaignId",
+          "campaignVersionId",
+          "expectedCampaignVersion",
+          "contentHash",
+          "decision",
+          "checklist",
+          "reason",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedCampaignVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "decision": {
+            "enum": [
+              "approved-for-approval",
+              "changes-requested"
+            ]
+          },
+          "checklist": {
+            "type": "object",
+            "required": [
+              "consentBoundaryReviewed",
+              "claimsReviewed",
+              "unsubscribeMechanismReviewed",
+              "senderIdentityReviewed"
+            ],
+            "properties": {
+              "consentBoundaryReviewed": {
+                "const": true
+              },
+              "claimsReviewed": {
+                "const": true
+              },
+              "unsubscribeMechanismReviewed": {
+                "const": true
+              },
+              "senderIdentityReviewed": {
+                "const": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "campaignId": "00000000-0000-4000-8000-000000000103",
+        "campaignVersionId": "00000000-0000-4000-8000-000000000104",
+        "expectedCampaignVersion": 2,
+        "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "decision": "approved-for-approval",
+        "checklist": {
+          "consentBoundaryReviewed": true,
+          "claimsReviewed": true,
+          "unsubscribeMechanismReviewed": true,
+          "senderIdentityReviewed": true
+        },
+        "reason": "The exact content and recipient purpose were reviewed.",
+        "idempotencyKey": "email.campaign-review-record.sample-0001"
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_campaign_review_record",
+      "cliExample": "supersuite action email campaign-review-record '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"campaignVersionId\":\"00000000-0000-4000-8000-000000000104\",\"expectedCampaignVersion\":2,\"contentHash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"decision\":\"approved-for-approval\",\"checklist\":{\"consentBoundaryReviewed\":true,\"claimsReviewed\":true,\"unsubscribeMechanismReviewed\":true,\"senderIdentityReviewed\":true},\"reason\":\"The exact content and recipient purpose were reviewed.\",\"idempotencyKey\":\"email.campaign-review-record.sample-0001\"}'",
+      "risk": "moderate",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_campaign_review_record",
+      "productMcpToolName": "letterline_campaign_review_record",
+      "productCliExample": "letterline action campaign-review-record '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"campaignVersionId\":\"00000000-0000-4000-8000-000000000104\",\"expectedCampaignVersion\":2,\"contentHash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"decision\":\"approved-for-approval\",\"checklist\":{\"consentBoundaryReviewed\":true,\"claimsReviewed\":true,\"unsubscribeMechanismReviewed\":true,\"senderIdentityReviewed\":true},\"reason\":\"The exact content and recipient purpose were reviewed.\",\"idempotencyKey\":\"email.campaign-review-record.sample-0001\"}'"
+    },
+    {
+      "id": "campaign-approve",
+      "moduleId": "email",
+      "title": "Approve exact campaign version",
+      "description": "Bind attributable owner or administrator approval to one reviewed content hash; approval never sends or schedules the message.",
+      "operation": "command",
+      "recordType": "campaign-approval",
+      "requiredFields": [
+        "campaignId",
+        "campaignVersionId",
+        "expectedCampaignVersion",
+        "contentHash",
+        "reviewId",
+        "idempotencyKey",
+        "dryRun"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "campaignId",
+          "campaignVersionId",
+          "expectedCampaignVersion",
+          "contentHash",
+          "reviewId",
+          "idempotencyKey",
+          "dryRun"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedCampaignVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "reviewId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "approval": {
+            "type": "object",
+            "required": [
+              "approved",
+              "approvedBy",
+              "approvedAt",
+              "decisionId",
+              "reason"
+            ],
+            "properties": {
+              "approved": {
+                "const": true
+              },
+              "approvedBy": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "approvedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "decisionId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "campaignId": "00000000-0000-4000-8000-000000000103",
+        "campaignVersionId": "00000000-0000-4000-8000-000000000104",
+        "expectedCampaignVersion": 3,
+        "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "reviewId": "00000000-0000-4000-8000-000000000106",
+        "idempotencyKey": "email.campaign-approve.sample-0001",
+        "dryRun": true
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_campaign_approve",
+      "cliExample": "supersuite action email campaign-approve '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"campaignVersionId\":\"00000000-0000-4000-8000-000000000104\",\"expectedCampaignVersion\":3,\"contentHash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"reviewId\":\"00000000-0000-4000-8000-000000000106\",\"idempotencyKey\":\"email.campaign-approve.sample-0001\",\"dryRun\":true}'",
+      "risk": "high",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_campaign_approve",
+      "productMcpToolName": "letterline_campaign_approve",
+      "productCliExample": "letterline action campaign-approve '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"campaignVersionId\":\"00000000-0000-4000-8000-000000000104\",\"expectedCampaignVersion\":3,\"contentHash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"reviewId\":\"00000000-0000-4000-8000-000000000106\",\"idempotencyKey\":\"email.campaign-approve.sample-0001\",\"dryRun\":true}'"
+    },
+    {
+      "id": "campaign-schedule",
+      "moduleId": "email",
+      "title": "Schedule approved campaign",
+      "description": "Schedule the exact approved content and audience under a fresh human approval; no message or provider call is made.",
+      "operation": "command",
+      "recordType": "campaign-schedule",
+      "requiredFields": [
+        "campaignId",
+        "campaignVersionId",
+        "expectedCampaignVersion",
+        "contentHash",
+        "scheduledAt",
+        "idempotencyKey",
+        "dryRun"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "campaignId",
+          "campaignVersionId",
+          "expectedCampaignVersion",
+          "contentHash",
+          "scheduledAt",
+          "idempotencyKey",
+          "dryRun"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedCampaignVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "approval": {
+            "type": "object",
+            "required": [
+              "approved",
+              "approvedBy",
+              "approvedAt",
+              "decisionId",
+              "reason"
+            ],
+            "properties": {
+              "approved": {
+                "const": true
+              },
+              "approvedBy": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "approvedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "decisionId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "campaignId": "00000000-0000-4000-8000-000000000103",
+        "campaignVersionId": "00000000-0000-4000-8000-000000000104",
+        "expectedCampaignVersion": 4,
+        "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "scheduledAt": "2026-09-01T16:00:00.000Z",
+        "idempotencyKey": "email.campaign-schedule.sample-0001",
+        "dryRun": true
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_campaign_schedule",
+      "cliExample": "supersuite action email campaign-schedule '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"campaignVersionId\":\"00000000-0000-4000-8000-000000000104\",\"expectedCampaignVersion\":4,\"contentHash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"scheduledAt\":\"2026-09-01T16:00:00.000Z\",\"idempotencyKey\":\"email.campaign-schedule.sample-0001\",\"dryRun\":true}'",
+      "risk": "high",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_campaign_schedule",
+      "productMcpToolName": "letterline_campaign_schedule",
+      "productCliExample": "letterline action campaign-schedule '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"campaignVersionId\":\"00000000-0000-4000-8000-000000000104\",\"expectedCampaignVersion\":4,\"contentHash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"scheduledAt\":\"2026-09-01T16:00:00.000Z\",\"idempotencyKey\":\"email.campaign-schedule.sample-0001\",\"dryRun\":true}'"
+    },
+    {
+      "id": "dispatch-plan-create",
+      "moduleId": "email",
+      "title": "Create provider-neutral dispatch plan",
+      "description": "Freeze eligible recipient IDs and hashes after a fresh suppression check; the engine stores no credentials and makes no provider request.",
+      "operation": "command",
+      "recordType": "dispatch-plan",
+      "requiredFields": [
+        "campaignId",
+        "campaignVersionId",
+        "expectedCampaignVersion",
+        "contentHash",
+        "scheduledAt",
+        "providerAdapterId",
+        "idempotencyKey",
+        "dryRun"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "campaignId",
+          "campaignVersionId",
+          "expectedCampaignVersion",
+          "contentHash",
+          "scheduledAt",
+          "providerAdapterId",
+          "idempotencyKey",
+          "dryRun"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "campaignVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedCampaignVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "providerAdapterId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{3,120}$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "approval": {
+            "type": "object",
+            "required": [
+              "approved",
+              "approvedBy",
+              "approvedAt",
+              "decisionId",
+              "reason"
+            ],
+            "properties": {
+              "approved": {
+                "const": true
+              },
+              "approvedBy": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "approvedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "decisionId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "campaignId": "00000000-0000-4000-8000-000000000103",
+        "campaignVersionId": "00000000-0000-4000-8000-000000000104",
+        "expectedCampaignVersion": 5,
+        "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "scheduledAt": "2026-09-01T16:00:00.000Z",
+        "providerAdapterId": "customer-provider-adapter-v1",
+        "idempotencyKey": "email.dispatch-plan-create.sample-0001",
+        "dryRun": true
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_dispatch_plan_create",
+      "cliExample": "supersuite action email dispatch-plan-create '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"campaignVersionId\":\"00000000-0000-4000-8000-000000000104\",\"expectedCampaignVersion\":5,\"contentHash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"scheduledAt\":\"2026-09-01T16:00:00.000Z\",\"providerAdapterId\":\"customer-provider-adapter-v1\",\"idempotencyKey\":\"email.dispatch-plan-create.sample-0001\",\"dryRun\":true}'",
+      "risk": "high",
+      "destructive": false,
+      "externalEffect": "dispatch-plan-only",
+      "idempotent": true,
+      "backendMcpToolName": "email_dispatch_plan_create",
+      "productMcpToolName": "letterline_dispatch_plan_create",
+      "productCliExample": "letterline action dispatch-plan-create '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"campaignVersionId\":\"00000000-0000-4000-8000-000000000104\",\"expectedCampaignVersion\":5,\"contentHash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"scheduledAt\":\"2026-09-01T16:00:00.000Z\",\"providerAdapterId\":\"customer-provider-adapter-v1\",\"idempotencyKey\":\"email.dispatch-plan-create.sample-0001\",\"dryRun\":true}'"
+    },
+    {
+      "id": "provider-receipt-ingest",
+      "moduleId": "email",
+      "title": "Ingest verified provider receipt",
+      "description": "Record a gateway-verified acceptance, delivery, bounce, complaint, or unsubscribe receipt idempotently; hard failures suppress before later plans.",
+      "operation": "command",
+      "recordType": "provider-receipt",
+      "requiredFields": [
+        "dispatchPlanId",
+        "subscriberId",
+        "eventId",
+        "eventType",
+        "occurredAt",
+        "providerMessageRefHash",
+        "gatewayVerification",
+        "idempotencyKey"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "dispatchPlanId",
+          "subscriberId",
+          "eventId",
+          "eventType",
+          "occurredAt",
+          "providerMessageRefHash",
+          "gatewayVerification",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "dispatchPlanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subscriberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{8,200}$"
+          },
+          "eventType": {
+            "enum": [
+              "accepted",
+              "delivered",
+              "soft-bounce",
+              "hard-bounce",
+              "complaint",
+              "unsubscribe"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "providerMessageRefHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "gatewayVerification": {
+            "type": "object",
+            "required": [
+              "verified",
+              "verifierId",
+              "verifiedAt",
+              "payloadHash"
+            ],
+            "properties": {
+              "verified": {
+                "const": true
+              },
+              "verifierId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._:-]{3,120}$"
+              },
+              "verifiedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "payloadHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "dispatchPlanId": "00000000-0000-4000-8000-000000000105",
+        "subscriberId": "00000000-0000-4000-8000-000000000102",
+        "eventId": "provider.event.0001",
+        "eventType": "delivered",
+        "occurredAt": "2026-09-01T16:01:00.000Z",
+        "providerMessageRefHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "gatewayVerification": {
+          "verified": true,
+          "verifierId": "signed-webhook-gateway-v1",
+          "verifiedAt": "2026-09-01T16:01:01.000Z",
+          "payloadHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "idempotencyKey": "email.provider-receipt-ingest.sample-0001"
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_provider_receipt_ingest",
+      "cliExample": "supersuite action email provider-receipt-ingest '{\"dispatchPlanId\":\"00000000-0000-4000-8000-000000000105\",\"subscriberId\":\"00000000-0000-4000-8000-000000000102\",\"eventId\":\"provider.event.0001\",\"eventType\":\"delivered\",\"occurredAt\":\"2026-09-01T16:01:00.000Z\",\"providerMessageRefHash\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"gatewayVerification\":{\"verified\":true,\"verifierId\":\"signed-webhook-gateway-v1\",\"verifiedAt\":\"2026-09-01T16:01:01.000Z\",\"payloadHash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"},\"idempotencyKey\":\"email.provider-receipt-ingest.sample-0001\"}'",
+      "risk": "moderate",
+      "destructive": false,
+      "externalEffect": "verified-provider-receipt-ingest",
+      "idempotent": true,
+      "backendMcpToolName": "email_provider_receipt_ingest",
+      "productMcpToolName": "letterline_provider_receipt_ingest",
+      "productCliExample": "letterline action provider-receipt-ingest '{\"dispatchPlanId\":\"00000000-0000-4000-8000-000000000105\",\"subscriberId\":\"00000000-0000-4000-8000-000000000102\",\"eventId\":\"provider.event.0001\",\"eventType\":\"delivered\",\"occurredAt\":\"2026-09-01T16:01:00.000Z\",\"providerMessageRefHash\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"gatewayVerification\":{\"verified\":true,\"verifierId\":\"signed-webhook-gateway-v1\",\"verifiedAt\":\"2026-09-01T16:01:01.000Z\",\"payloadHash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"},\"idempotencyKey\":\"email.provider-receipt-ingest.sample-0001\"}'"
+    },
+    {
+      "id": "campaign-analytics-aggregate",
+      "moduleId": "email",
+      "title": "Aggregate verified delivery outcomes",
+      "description": "Return coarse counts from verified provider receipts only, with no fabricated opens, clicks, revenue, or attribution.",
+      "operation": "read",
+      "recordType": "provider-receipt",
+      "requiredFields": [
+        "campaignId",
+        "from",
+        "to"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "campaignId",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "campaignId": "00000000-0000-4000-8000-000000000103",
+        "from": "2026-09-01T00:00:00.000Z",
+        "to": "2026-09-30T23:59:59.000Z"
+      },
+      "requiredScope": "read",
+      "mcpToolName": "email_campaign_analytics_aggregate",
+      "cliExample": "supersuite action email campaign-analytics-aggregate '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"from\":\"2026-09-01T00:00:00.000Z\",\"to\":\"2026-09-30T23:59:59.000Z\"}'",
+      "risk": "low",
+      "destructive": false,
+      "externalEffect": "none",
+      "idempotent": true,
+      "backendMcpToolName": "email_campaign_analytics_aggregate",
+      "productMcpToolName": "letterline_campaign_analytics_aggregate",
+      "productCliExample": "letterline action campaign-analytics-aggregate '{\"campaignId\":\"00000000-0000-4000-8000-000000000103\",\"from\":\"2026-09-01T00:00:00.000Z\",\"to\":\"2026-09-30T23:59:59.000Z\"}'"
+    },
+    {
+      "id": "audience-export",
+      "moduleId": "email",
+      "title": "Create private audience export",
+      "description": "Create a content-addressed private export manifest and return authorized rows once; provider credentials and suppression ambiguity are excluded.",
+      "operation": "command",
+      "recordType": "audience-export",
+      "requiredFields": [
+        "audienceId",
+        "format",
+        "includeSuppressed",
+        "idempotencyKey",
+        "dryRun"
+      ],
+      "engine": "email",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "audienceId",
+          "format",
+          "includeSuppressed",
+          "idempotencyKey",
+          "dryRun"
+        ],
+        "properties": {
+          "audienceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "format": {
+            "enum": [
+              "canonical-json",
+              "csv"
+            ]
+          },
+          "includeSuppressed": {
+            "type": "boolean"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "approval": {
+            "type": "object",
+            "required": [
+              "approved",
+              "approvedBy",
+              "approvedAt",
+              "decisionId",
+              "reason"
+            ],
+            "properties": {
+              "approved": {
+                "const": true
+              },
+              "approvedBy": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "approvedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "decisionId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._:-]{16,200}$"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "exampleInput": {
+        "audienceId": "00000000-0000-4000-8000-000000000101",
+        "format": "canonical-json",
+        "includeSuppressed": false,
+        "idempotencyKey": "email.audience-export.sample-0001",
+        "dryRun": true
+      },
+      "requiredScope": "write",
+      "mcpToolName": "email_audience_export",
+      "cliExample": "supersuite action email audience-export '{\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"format\":\"canonical-json\",\"includeSuppressed\":false,\"idempotencyKey\":\"email.audience-export.sample-0001\",\"dryRun\":true}'",
+      "risk": "high",
+      "destructive": false,
+      "externalEffect": "private-export",
+      "idempotent": true,
+      "backendMcpToolName": "email_audience_export",
+      "productMcpToolName": "letterline_audience_export",
+      "productCliExample": "letterline action audience-export '{\"audienceId\":\"00000000-0000-4000-8000-000000000101\",\"format\":\"canonical-json\",\"includeSuppressed\":false,\"idempotencyKey\":\"email.audience-export.sample-0001\",\"dryRun\":true}'"
+    }
+  ]
+}

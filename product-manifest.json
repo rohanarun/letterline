@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "release": {
-    "productVersion": "0.1.1",
+    "productVersion": "0.2.0",
     "backendRelease": "v0.4.2",
     "backendCommit": "20c4a704c77cbbbff1da995e1d91b937625a8aa4",
     "backendSourceSnapshotSha256": "d0b7b1079d4924eb7369c788a979a707d45bb63470290e6ac33ee5662d78f69f",
@@ -64,6 +64,194 @@
   "cleanRoom": {
     "statement": "Original clean-room implementation of the email marketing software category, designed and written independently.",
     "sourceBoundary": "Public category behavior informed requirements; implementation and product identity are original."
+  },
+  "experience": {
+    "releaseBoundary": "Complete for every typed action declared by this product manifest; it does not claim feature parity with unrelated third-party products.",
+    "headline": "Purpose-bound audiences",
+    "primaryActionId": "audience-create",
+    "quickActionIds": [
+      "audience-create",
+      "subscriber-opt-in-record",
+      "subscriber-reactivate",
+      "subscriber-suppress"
+    ],
+    "navigation": [
+      "Overview",
+      "Records",
+      "Workflows",
+      "AI assistance",
+      "Settings"
+    ],
+    "workflowGroups": [
+      {
+        "name": "Create and capture",
+        "actionIds": [
+          "audience-create",
+          "subscriber-opt-in-record",
+          "subscriber-suppress",
+          "subscriber-list",
+          "campaign-create",
+          "campaign-version-draft",
+          "campaign-review-record",
+          "dispatch-plan-create",
+          "provider-receipt-ingest",
+          "campaign-analytics-aggregate",
+          "audience-export"
+        ]
+      },
+      {
+        "name": "Operate and update",
+        "actionIds": [
+          "subscriber-reactivate"
+        ]
+      },
+      {
+        "name": "Review and approve",
+        "actionIds": [
+          "campaign-approve",
+          "campaign-schedule"
+        ]
+      },
+      {
+        "name": "AI assistance",
+        "actionIds": [
+          "subject-propose",
+          "body-propose"
+        ]
+      }
+    ],
+    "metrics": [
+      {
+        "label": "Typed actions",
+        "value": 16
+      },
+      {
+        "label": "Record types",
+        "value": 14
+      },
+      {
+        "label": "AI workflows",
+        "value": 2
+      },
+      {
+        "label": "Review gates",
+        "value": 2
+      }
+    ],
+    "sampleRecords": [
+      {
+        "id": "demo-email-01",
+        "moduleId": "email",
+        "recordType": "audience",
+        "title": "Audience Launch",
+        "state": "active",
+        "createdAt": "2026-08-18T13:30:00.000Z",
+        "updatedAt": "2026-08-25T13:15:00.000Z",
+        "data": {
+          "owner": "Operations",
+          "evidenceStatus": "verified",
+          "nextStep": "Create purpose-bound audience"
+        }
+      },
+      {
+        "id": "demo-email-02",
+        "moduleId": "email",
+        "recordType": "subscriber",
+        "title": "Subscriber Operations",
+        "state": "in review",
+        "createdAt": "2026-08-19T13:30:00.000Z",
+        "updatedAt": "2026-08-25T12:15:00.000Z",
+        "data": {
+          "owner": "Product",
+          "evidenceStatus": "current",
+          "nextStep": "Record lawful subscriber opt-in"
+        }
+      },
+      {
+        "id": "demo-email-03",
+        "moduleId": "email",
+        "recordType": "consent-receipt",
+        "title": "Consent Receipt Evidence",
+        "state": "ready",
+        "createdAt": "2026-08-20T13:30:00.000Z",
+        "updatedAt": "2026-08-25T11:15:00.000Z",
+        "data": {
+          "owner": "Operations",
+          "evidenceStatus": "current",
+          "nextStep": "Reconfirm suppressed subscriber"
+        }
+      },
+      {
+        "id": "demo-email-04",
+        "moduleId": "email",
+        "recordType": "suppression",
+        "title": "Suppression Review",
+        "state": "scheduled",
+        "createdAt": "2026-08-21T13:30:00.000Z",
+        "updatedAt": "2026-08-25T10:15:00.000Z",
+        "data": {
+          "owner": "Product",
+          "evidenceStatus": "verified",
+          "nextStep": "Suppress or unsubscribe immediately"
+        }
+      },
+      {
+        "id": "demo-email-05",
+        "moduleId": "email",
+        "recordType": "campaign",
+        "title": "Campaign Pilot",
+        "state": "draft",
+        "createdAt": "2026-08-22T13:30:00.000Z",
+        "updatedAt": "2026-08-25T09:15:00.000Z",
+        "data": {
+          "owner": "Operations",
+          "evidenceStatus": "current",
+          "nextStep": "List audience subscribers"
+        }
+      },
+      {
+        "id": "demo-email-06",
+        "moduleId": "email",
+        "recordType": "campaign-version",
+        "title": "Campaign Version Archive",
+        "state": "complete",
+        "createdAt": "2026-08-23T13:30:00.000Z",
+        "updatedAt": "2026-08-25T08:15:00.000Z",
+        "data": {
+          "owner": "Product",
+          "evidenceStatus": "current",
+          "nextStep": "Create audience-bound campaign"
+        }
+      },
+      {
+        "id": "demo-email-07",
+        "moduleId": "email",
+        "recordType": "campaign-review",
+        "title": "Campaign Review Launch",
+        "state": "active",
+        "createdAt": "2026-08-24T13:30:00.000Z",
+        "updatedAt": "2026-08-25T07:15:00.000Z",
+        "data": {
+          "owner": "Operations",
+          "evidenceStatus": "verified",
+          "nextStep": "Create immutable campaign version"
+        }
+      },
+      {
+        "id": "demo-email-08",
+        "moduleId": "email",
+        "recordType": "campaign-approval",
+        "title": "Campaign Approval Operations",
+        "state": "in review",
+        "createdAt": "2026-08-25T13:30:00.000Z",
+        "updatedAt": "2026-08-25T06:15:00.000Z",
+        "data": {
+          "owner": "Product",
+          "evidenceStatus": "current",
+          "nextStep": "Propose cited subject lines"
+        }
+      }
+    ]
   },
   "actions": [
     {

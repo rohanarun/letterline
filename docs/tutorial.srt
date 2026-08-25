@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:02,250
+Open the Letterline workspace overview and review available typed operations.
+
+2
+00:00:02,250 --> 00:00:05,375
+Click Connect workspace to authenticate and load durable records.
+
+3
+00:00:05,375 --> 00:00:07,875
+Fill in the required name, purpose, consent policy version, and idempotency key.
+
+4
+00:00:07,875 --> 00:00:10,375
+Submit the audience creation action and confirm successful completion.
+
+5
+00:00:10,375 --> 00:00:17,000
+Search records to view and verify the newly created active audience record details.

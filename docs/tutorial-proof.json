@@ -1,0 +1,169 @@
+{
+  "schema": "managed-oss-functional-tutorial.v1",
+  "product": {
+    "slug": "letterline",
+    "name": "Letterline",
+    "moduleId": "email",
+    "version": "0.3.1",
+    "manifestSha256": "b3784a9b8bcdadc10c8d13444369f91567e4ae10223d5799bb8f12d1376ef7ed"
+  },
+  "backend": {
+    "release": "v0.4.4",
+    "commit": "148abce99b91d8b9fdc8aa41c3f0eba283796db4"
+  },
+  "testedAt": "2026-08-25T21:57:18.616Z",
+  "browser": {
+    "engine": "Chromium",
+    "version": "151.0.7922.174",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "functionalProof": {
+    "action": {
+      "id": "audience-create",
+      "title": "Create purpose-bound audience",
+      "httpStatus": 200
+    },
+    "record": {
+      "id": "28bcd209-60c5-4517-b7b7-6cc6e3daa2bc",
+      "recordType": "audience",
+      "title": "Letterline tutorial workspace",
+      "state": "active"
+    },
+    "detail": {
+      "httpStatus": 200,
+      "matched": true
+    },
+    "assertions": [
+      "browser-authenticated-real-backend",
+      "guided-form-submitted",
+      "action-http-200",
+      "durable-record-returned",
+      "record-detail-http-200",
+      "exact-record-reopened-in-ui"
+    ]
+  },
+  "timeline": [
+    {
+      "stepId": "overview",
+      "observedLabel": "Meet Letterline",
+      "observedFact": "Open the real Letterline workspace and identify its core workflow.",
+      "startMs": 0,
+      "endMs": 2250
+    },
+    {
+      "stepId": "connect",
+      "observedLabel": "Connect the workspace",
+      "observedFact": "Authenticate this browser to the isolated shared backend and load durable records.",
+      "startMs": 2250,
+      "endMs": 5375
+    },
+    {
+      "stepId": "configure",
+      "observedLabel": "Create purpose-bound audience",
+      "observedFact": "Complete the guided, contract-validated form for the product's primary workflow.",
+      "startMs": 5375,
+      "endMs": 7875
+    },
+    {
+      "stepId": "execute",
+      "observedLabel": "Run the real workflow",
+      "observedFact": "Submit the action to the shared backend and require a successful durable result.",
+      "startMs": 7875,
+      "endMs": 10375
+    },
+    {
+      "stepId": "inspect",
+      "observedLabel": "Inspect the saved record",
+      "observedFact": "Search the product record view and reopen the exact record returned by the workflow.",
+      "startMs": 10375,
+      "endMs": 17000
+    }
+  ],
+  "explanation": {
+    "title": "Creating a Purpose-Bound Audience in Letterline",
+    "summary": "Step-by-step walkthrough of connecting to Letterline, configuring a purpose-bound audience action, executing the workflow, and inspecting the created record.",
+    "cues": [
+      {
+        "stepId": "overview",
+        "startMs": 0,
+        "endMs": 2250,
+        "label": "Meet Letterline",
+        "subtitle": "Open the Letterline workspace overview and review available typed operations."
+      },
+      {
+        "stepId": "connect",
+        "startMs": 2250,
+        "endMs": 5375,
+        "label": "Connect the workspace",
+        "subtitle": "Click Connect workspace to authenticate and load durable records."
+      },
+      {
+        "stepId": "configure",
+        "startMs": 5375,
+        "endMs": 7875,
+        "label": "Configure audience parameters",
+        "subtitle": "Fill in the required name, purpose, consent policy version, and idempotency key."
+      },
+      {
+        "stepId": "execute",
+        "startMs": 7875,
+        "endMs": 10375,
+        "label": "Execute the workflow",
+        "subtitle": "Submit the audience creation action and confirm successful completion."
+      },
+      {
+        "stepId": "inspect",
+        "startMs": 10375,
+        "endMs": 17000,
+        "label": "Inspect the saved record",
+        "subtitle": "Search records to view and verify the newly created active audience record details."
+      }
+    ],
+    "generation": {
+      "provider": "OpenRouter",
+      "model": "google/gemini-3.7-flash",
+      "requestedModel": "google/gemini-3.7-flash",
+      "responseModel": "google/gemini-3.7-flash",
+      "responseId": "gen-1787695034-vtS11HWQU9irJWipLiBB",
+      "responseCreatedAt": "2026-08-25T21:57:14.000Z",
+      "input": {
+        "rawVideoSha256": "283df12cf5e264377c9c77f4b26173bb4b61f015540496d51d0fdf93fe572a34",
+        "workflowFactsSha256": "e983669d5be6f0377b87ec5f4392d5950bf099bd24702bc0a6929347f841fd11"
+      },
+      "usage": {
+        "promptTokens": 1559,
+        "completionTokens": 558,
+        "totalTokens": 2117
+      }
+    }
+  },
+  "video": {
+    "raw": {
+      "sha256": "283df12cf5e264377c9c77f4b26173bb4b61f015540496d51d0fdf93fe572a34",
+      "codec": "h264",
+      "width": 1280,
+      "height": 720,
+      "durationSeconds": 17,
+      "sizeBytes": 395245
+    },
+    "final": {
+      "file": "docs/tutorial.mp4",
+      "sha256": "a44340111ad76cb2672d61ec34355e2756cba85baad7d6cb900b78b7a834cbe9",
+      "codec": "h264",
+      "width": 1280,
+      "height": 720,
+      "durationSeconds": 17,
+      "sizeBytes": 399643
+    },
+    "subtitles": {
+      "file": "docs/tutorial.srt",
+      "sha256": "70ff3a5db37020fc8d19e75f30c4b2ac2a9c4f73a77fbf4f94fdf3ffb704bc62",
+      "format": "SubRip"
+    },
+    "overlaysBurnedIn": true,
+    "silent": true
+  }
+}

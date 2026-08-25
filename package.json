@@ -1,6 +1,6 @@
 {
   "name": "@managed-oss/letterline",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Purpose-bound audiences, consent evidence, reviewed campaigns, and provider-neutral dispatch plans.",
   "type": "module",
   "license": "MIT",
